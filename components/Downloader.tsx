@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { useToast } from '@/hooks/useToast';
 import { useHistory } from '@/hooks/useHistory';
 import { Toast } from './Toast';
-import { VideoInfo, VideoFormat } from '@/types';
+import { VideoInfo } from '@/types';
 import { extractVideoId, generateId } from '@/lib/utils';
 import {
   Link2,
@@ -34,7 +34,7 @@ export function Downloader() {
   const [activeTab, setActiveTab] = useState<'download' | 'history'>('download');
 
   const { toasts, addToast, removeToast } = useToast();
-  const { history, addToHistory, removeFromHistory, clearHistory, isLoaded } = useHistory();
+  const { history, addToHistory, removeFromHistory, clearHistory } = useHistory();
 
   const handleFetch = async () => {
     const videoId = extractVideoId(url);
@@ -81,10 +81,26 @@ export function Downloader() {
     }
   };
 
-  const handleDownload = (format: VideoFormat, type: 'mp4' | 'mp3') => {
+  const handleExternalDownload = (type: 'mp4' | 'mp3') => {
     if (!videoInfo) return;
 
-    // Add to history
+    addToHistory({
+      id: generateId(),
+      title: videoInfo.title,
+      thumbnail: videoInfo.thumbnail,
+      url: videoInfo.id,
+      format: type,
+      quality: type === 'mp4' ? '360p' : '128kbps',
+    });
+
+    const externalUrl = `https://yt1s.com/en?q=${encodeURIComponent(`https://youtube.com/watch?v=${videoInfo.id}`)}`;
+    window.open(externalUrl, '_blank');
+    addToast('Mengarahkan ke halaman download...', 'info');
+  };
+
+  const handleFormatDownload = (format: any, type: 'mp4' | 'mp3') => {
+    if (!videoInfo) return;
+
     addToHistory({
       id: generateId(),
       title: videoInfo.title,
@@ -94,17 +110,11 @@ export function Downloader() {
       quality: format.quality,
     });
 
-    // Open download in new tab
-    if (format.url && format.url.startsWith('http')) {
+    if (format.url && format.url.startsWith('http') && !format.url.includes('youtube.com/watch')) {
       window.open(format.url, '_blank');
       addToast(`Membuka link download ${type.toUpperCase()}...`, 'info');
     } else {
-      // Fallback: redirect to a reliable external service
-      const externalUrl = type === 'mp4'
-        ? `https://yt1s.com/en?q=${encodeURIComponent(`https://youtube.com/watch?v=${videoInfo.id}`)}`
-        : `https://yt1s.com/en?q=${encodeURIComponent(`https://youtube.com/watch?v=${videoInfo.id}`)}`;
-      window.open(externalUrl, '_blank');
-      addToast('Mengarahkan ke halaman download...', 'info');
+      handleExternalDownload(type);
     }
   };
 
@@ -315,7 +325,7 @@ export function Downloader() {
                               )}
                             </button>
                             <button
-                              onClick={() => handleDownload(format, 'mp4')}
+                              onClick={() => handleFormatDownload(format, 'mp4')}
                               className="neo-button-primary text-sm py-2 px-4"
                             >
                               <Download className="w-4 h-4 mr-1" />
@@ -328,7 +338,7 @@ export function Downloader() {
                       <div className="text-center py-8">
                         <p className="text-gray-500 dark:text-gray-400 mb-4">Format video tidak tersedia langsung.</p>
                         <button
-                          onClick={() => handleDownload({ itag: 18, quality: '360p', type: 'video', container: 'mp4', url: '' }, 'mp4')}
+                          onClick={() => handleExternalDownload('mp4')}
                           className="neo-button-primary"
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />
@@ -363,7 +373,7 @@ export function Downloader() {
                               )}
                             </button>
                             <button
-                              onClick={() => handleDownload(format, 'mp3')}
+                              onClick={() => handleFormatDownload(format, 'mp3')}
                               className="neo-button-dark text-sm py-2 px-4"
                             >
                               <Download className="w-4 h-4 mr-1" />
@@ -376,7 +386,7 @@ export function Downloader() {
                       <div className="text-center py-8">
                         <p className="text-gray-500 dark:text-gray-400 mb-4">Format audio tidak tersedia langsung.</p>
                         <button
-                          onClick={() => handleDownload({ itag: 140, quality: '128kbps', type: 'audio', container: 'm4a', url: '' }, 'mp3')}
+                          onClick={() => handleExternalDownload('mp3')}
                           className="neo-button-dark"
                         >
                           <ExternalLink className="w-4 h-4 mr-2" />

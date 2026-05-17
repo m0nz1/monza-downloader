@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Try ytdl-core first
+    // Try ytdl-core
     try {
       const info = await ytdl.getInfo(url, {
         requestOptions: {
@@ -52,9 +52,7 @@ export async function POST(request: NextRequest) {
                         videoFormats.find((f) => f.quality === '720p') || 
                         videoFormats[0];
 
-      const bestAudio = audioFormats.find((f) => f.container === 'm4a') || 
-                        audioFormats.find((f) => f.container === 'mp4') || 
-                        audioFormats[0];
+      const bestAudio = audioFormats[0];
 
       return NextResponse.json({
         success: true,
@@ -74,7 +72,7 @@ export async function POST(request: NextRequest) {
     } catch (ytdlError) {
       console.error('ytdl error:', ytdlError);
 
-      // Fallback: return basic info with external download links
+      // Fallback: return basic info
       return NextResponse.json({
         success: true,
         fallback: true,
@@ -88,14 +86,14 @@ export async function POST(request: NextRequest) {
             video: [{
               itag: 18,
               quality: '360p',
-              type: 'video',
+              type: 'video' as const,
               container: 'mp4',
               url: `https://www.youtube.com/watch?v=${videoId}`,
             }],
             audio: [{
               itag: 140,
               quality: '128kbps',
-              type: 'audio',
+              type: 'audio' as const,
               container: 'm4a',
               url: `https://www.youtube.com/watch?v=${videoId}`,
             }],
