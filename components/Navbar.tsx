@@ -6,7 +6,7 @@ import { useTheme } from './ThemeProvider';
 import { Download, Sun, Moon, Menu, X } from 'lucide-react';
 
 export function Navbar() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, mounted } = useTheme();
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
@@ -16,6 +16,17 @@ export function Navbar() {
     { href: '/terms', label: 'Terms' },
     { href: '/privacy', label: 'Privacy' },
   ];
+
+  // Prevent hydration mismatch by rendering consistent icon during SSR
+  const themeIcon = mounted ? (
+    theme === 'light' ? (
+      <Moon className="w-5 h-5 text-neo-black" />
+    ) : (
+      <Sun className="w-5 h-5 text-neo-yellow" />
+    )
+  ) : (
+    <Moon className="w-5 h-5 text-neo-black" />
+  );
 
   return (
     <nav className="sticky top-0 z-50 bg-white dark:bg-[#1a1a2e] border-b-neo border-neo-black dark:border-white shadow-neo">
@@ -51,11 +62,7 @@ export function Navbar() {
               className="w-10 h-10 flex items-center justify-center border-neo border-neo-black dark:border-white rounded-lg bg-gray-100 dark:bg-gray-800 shadow-neo hover:shadow-neo-hover hover:translate-x-[2px] hover:translate-y-[2px] transition-all"
               aria-label="Toggle theme"
             >
-              {theme === 'light' ? (
-                <Moon className="w-5 h-5 text-neo-black" />
-              ) : (
-                <Sun className="w-5 h-5 text-neo-yellow" />
-              )}
+              {themeIcon}
             </button>
 
             <button
